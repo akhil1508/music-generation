@@ -2,7 +2,6 @@ import os
 import scipy.io.wavfile as wav
 import numpy as np
 from pipes import quote
-from config import nn_config
 
 def convert_mp3_to_wav(filename, sample_frequency):
 	ext = filename[-4:]
@@ -14,7 +13,7 @@ def convert_mp3_to_wav(filename, sample_frequency):
 	new_path = ''
 	if(filename[0] == '/'):
 		new_path = '/'
-	for i in xrange(len(files)-1):
+	for i in range(len(files)-1):
 		new_path += files[i]+'/'
 	tmp_path = new_path + 'tmp'
 	new_path += 'wave'
@@ -41,7 +40,7 @@ def convert_flac_to_wav(filename, sample_frequency):
 	new_path = ''
 	if(filename[0] == '/'):
 		new_path = '/'
-	for i in xrange(len(files)-1):
+	for i in range(len(files)-1):
 		new_path += files[i]+'/'
 	new_path += 'wave'
 	if not os.path.exists(new_path):
@@ -119,15 +118,15 @@ def convert_wav_files_to_nptensor(directory, block_size, max_seq_len, out_file, 
 	num_files = len(files)
 	if(num_files > max_files):
 		num_files = max_files
-	for file_idx in xrange(num_files):
+	for file_idx in range(num_files):
 		file = files[file_idx]
-		print 'Processing: ', (file_idx+1),'/',num_files
-		print 'Filename: ', file
+		print ('Processing: ', (file_idx+1),'/',num_files)
+		print ('Filename: ', file)
 		X, Y = load_training_example(file, block_size, useTimeDomain=useTimeDomain)
 		cur_seq = 0
 		total_seq = len(X)
-		print total_seq
-		print max_seq_len
+		print (total_seq)
+		print (max_seq_len)
 		while cur_seq + max_seq_len < total_seq:
 			chunks_X.append(X[cur_seq:cur_seq+max_seq_len])
 			chunks_Y.append(Y[cur_seq:cur_seq+max_seq_len])
@@ -139,15 +138,15 @@ def convert_wav_files_to_nptensor(directory, block_size, max_seq_len, out_file, 
 	out_shape = (num_examples, max_seq_len, num_dims_out)
 	x_data = np.zeros(out_shape)
 	y_data = np.zeros(out_shape)
-	for n in xrange(num_examples):
-		for i in xrange(max_seq_len):
+	for n in range(num_examples):
+		for i in range(max_seq_len):
 			x_data[n][i] = chunks_X[n][i]
 			y_data[n][i] = chunks_Y[n][i]
-		print 'Saved example ', (n+1), ' / ',num_examples
-	print 'Flushing to disk...'
+		print ('Saved example ', (n+1), ' / ',num_examples)
+	print ('Flushing to disk...')
 	mean_x = np.mean(np.mean(x_data, axis=0), axis=0) #Mean across num examples and num timesteps
 	std_x = np.sqrt(np.mean(np.mean(np.abs(x_data-mean_x)**2, axis=0), axis=0)) # STD across num examples and num timesteps
-	std_x = np.maximum(1.0e-8, std_x) #Clamp variance if too tiny
+	std_x = np.max(1.0e-8, std_x) #Clamp variance if too tiny
 	x_data[:][:] -= mean_x #Mean 0
 	x_data[:][:] /= std_x #Variance 1
 	y_data[:][:] -= mean_x #Mean 0
@@ -157,13 +156,13 @@ def convert_wav_files_to_nptensor(directory, block_size, max_seq_len, out_file, 
 	np.save(out_file+'_var', std_x)
 	np.save(out_file+'_x', x_data)
 	np.save(out_file+'_y', y_data)
-	print 'Done!'
+	print ('Done!')
 
 def convert_nptensor_to_wav_files(tensor, indices, filename, useTimeDomain=False):
 	num_seqs = tensor.shape[1]
 	for i in indices:
 		chunks = []
-		for x in xrange(num_seqs):
+		for x in range(num_seqs):
 			chunks.append(tensor[i][x])
 		save_generated_example(filename+str(i)+'.wav', chunks,useTimeDomain=useTimeDomain)
 
@@ -194,4 +193,3 @@ def audio_unit_test(filename, filename2):
 	time_blocks = fft_blocks_to_time_blocks(ft_blocks)
 	song = convert_sample_blocks_to_np_audio(time_blocks)
 	write_np_as_wav(song, bitrate, filename2)
-return  
