@@ -4,5 +4,5 @@ def get_config() :
   params['hidden_dimension_size'] = 1024
   params['model_basename'] = "./musicNPWeights"
   params['model_file'] = "./datasets/musicNP"
-  params['dataset_directory'] = "./datasets/music"
+  params['dataset_directory'] = "./datasets/music/"
   return params

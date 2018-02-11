@@ -109,55 +109,55 @@ def fft_blocks_to_time_blocks(blocks_ft_domain):
 	return time_blocks
 
 def convert_wav_files_to_nptensor(directory, block_size, max_seq_len, out_file, max_files=20, useTimeDomain=False):
-	files = []
-	for file in os.listdir(directory):
-		if file.endswith('.wav'):
-			files.append(directory+file)
-	chunks_X = []
-	chunks_Y = []
-	num_files = len(files)
-	if(num_files > max_files):
-		num_files = max_files
-	for file_idx in range(num_files):
-		file = files[file_idx]
-		print ('Processing: ', (file_idx+1),'/',num_files)
-		print ('Filename: ', file)
-		X, Y = load_training_example(file, block_size, useTimeDomain=useTimeDomain)
-		cur_seq = 0
-		total_seq = len(X)
-		print (total_seq)
-		print (max_seq_len)
-		while cur_seq + max_seq_len < total_seq:
-			chunks_X.append(X[cur_seq:cur_seq+max_seq_len])
-			chunks_Y.append(Y[cur_seq:cur_seq+max_seq_len])
-			cur_seq += max_seq_len
-	num_examples = len(chunks_X)
-	num_dims_out = block_size * 2
-	if(useTimeDomain):
-		num_dims_out = block_size
-	out_shape = (num_examples, max_seq_len, num_dims_out)
-	x_data = np.zeros(out_shape)
-	y_data = np.zeros(out_shape)
-	for n in range(num_examples):
-		for i in range(max_seq_len):
-			x_data[n][i] = chunks_X[n][i]
-			y_data[n][i] = chunks_Y[n][i]
-		print ('Saved example ', (n+1), ' / ',num_examples)
-	print ('Flushing to disk...')
-	mean_x = np.mean(np.mean(x_data, axis=0), axis=0) #Mean across num examples and num timesteps
-	std_x = np.sqrt(np.mean(np.mean(np.abs(x_data-mean_x)**2, axis=0), axis=0)) # STD across num examples and num timesteps
-	std_x = np.max(1.0e-8, std_x) #Clamp variance if too tiny
-	x_data[:][:] -= mean_x #Mean 0
-	x_data[:][:] /= std_x #Variance 1
-	y_data[:][:] -= mean_x #Mean 0
-	y_data[:][:] /= std_x #Variance 1
+  files = []
+  for file in os.listdir(directory):
+	  if file.endswith('.wav'):
+	    files.append(directory+file)
+  chunks_X = []
+  chunks_Y = []
+  num_files = len(files)
+  if(num_files > max_files):
+    num_files = max_files 
+  for file_idx in range(num_files):
+    file = files[file_idx]
+    print ('Processing: ', (file_idx+1),'/',num_files)
+    print ('Filename: ', file)
+    X, Y = load_training_example(file, block_size, useTimeDomain=useTimeDomain)
+    cur_seq = 0
+    total_seq = len(X)
+    print (total_seq)
+    print (max_seq_len)
+    while cur_seq + max_seq_len < total_seq:
+      chunks_X.append(X[cur_seq:cur_seq+max_seq_len])
+      chunks_Y.append(Y[cur_seq:cur_seq+max_seq_len])
+      cur_seq += max_seq_len
+  num_examples = len(chunks_X)
+  num_dims_out = block_size * 2	
+  if(useTimeDomain):
+    num_dims_out = block_size
+  out_shape = (num_examples, max_seq_len, int(num_dims_out))
+  print(out_shape)
+  x_data = np.zeros(out_shape)
+  y_data = np.zeros(out_shape)
+  for n in range(num_examples):
+    for i in range(max_seq_len):
+      x_data[n][i] = chunks_X[n][i]
+      y_data[n][i] = chunks_Y[n][i]
+    print ('Saved example ', (n+1), ' / ',num_examples)
+  print ('Flushing to disk...')
+  mean_x = np.mean(np.mean(x_data, axis=0), axis=0)
+  std_x = np.sqrt(np.mean(np.mean(np.abs(x_data-mean_x)**2, axis=0), axis=0))
+  #std_x = np.max(1.0e-8, std_x) #Clamp variance if too tiny
+  x_data[:][:] -= mean_x #Mean 0
+  x_data[:][:] /= std_x #Variance 1
+  y_data[:][:] -= mean_x #Mean 0
+  y_data[:][:] /= std_x #Variance 1
 
-	np.save(out_file+'_mean', mean_x)
-	np.save(out_file+'_var', std_x)
-	np.save(out_file+'_x', x_data)
-	np.save(out_file+'_y', y_data)
-	print ('Done!')
-
+  np.save(out_file+'_mean', mean_x)
+  np.save(out_file+'_var', std_x)
+  np.save(out_file+'_x', x_data)
+  np.save(out_file+'_y', y_data)
+  print ('Done!')
 def convert_nptensor_to_wav_files(tensor, indices, filename, useTimeDomain=False):
 	num_seqs = tensor.shape[1]
 	for i in indices:
